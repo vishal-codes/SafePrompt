@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "SafePrompt Redactor",
+  "version": "0.1.2",
+  "description": "Right-click to redact selected text via your local SafePrompt API.",
+  "permissions": ["contextMenus", "activeTab", "scripting", "clipboardWrite"],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
+

@@ -1,0 +1,123 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Type checkers / static analysis
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+.ipython/
+profile_default/
+
+# Sphinx docs
+docs/_build/
+doc/_build/
+
+# PyBuilder
+target/
+
+# PEP 582 (e.g., PDM)
+__pypackages__/
+
+# Environments
+.env
+.env.*
+!.env.example
+.venv
+.venv*/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.python-version
+
+# Frameworks / tools
+.scrapy/
+celerybeat-schedule
+celerybeat.pid
+instance/
+.webassets-cache
+local_settings.py
+db.sqlite3
+*.sqlite3
+
+# IDEs / editors
+.vscode/
+.idea/
+*.iml
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+.ropeproject
+.spyderproject
+.spyproject
+.project
+.pydevproject
+
+# OS / filesystem
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors swap/backup
+*~
+*.swp
+*.swo
+.*.sw?
+.#*
+
+# Logs
+*.log
+log/
+logs/
