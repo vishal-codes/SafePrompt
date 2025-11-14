@@ -8,8 +8,7 @@ This repo includes:
 * a **Chrome extension (MV3)** with a right-click context menu to redact any selected text on a page
 * Jupyter notebooks to **fine-tune** and **publish adapters** to Hugging Face
 
-> Hugging Face adapters: **`chinu-codes/safe-prompt-llama-3_2-3b-lora`**
-> [https://huggingface.co/chinu-codes/safe-prompt-llama-3_2-3b-lora](https://huggingface.co/chinu-codes/safe-prompt-llama-3_2-3b-lora)
+> Hugging Face adapters: [**`chinu-codes/llama-3.2-3b-pii-redactor-lora`**](https://huggingface.co/chinu-codes/llama-3.2-3b-pii-redactor-lora)
 
 ---
 
@@ -139,7 +138,7 @@ You can adjust the backend via environment variables:
 
 | Variable            | Default                                     | Meaning                                             |
 | ------------------- | ------------------------------------------- | --------------------------------------------------- |
-| `ADAPTER_REPO`      | `chinu-codes/safe-prompt-llama-3_2-3b-lora` | HF repo containing LoRA adapters (+ custom handler) |
+| `ADAPTER_REPO`      | `chinu-codes/llama-3.2-3b-pii-redactor-lora` | HF repo containing LoRA adapters (+ custom handler) |
 | `SEQ_LEN`           | `256`                                       | Max input tokens (smaller ⇒ lower RAM/latency)      |
 | `MAX_NEW_TOKENS`    | `64`                                        | Generation ceiling for the redacted span            |
 | `VALIDATE_MODE`     | `enforce`                                   | `off` | `warn` | `enforce` (see validators)         |
@@ -197,43 +196,9 @@ Add more detectors as you need (e.g., SSN, PAN, IP, IBAN, API keys).
 * **Objective**: **completion-only loss** after the `<safe>` token (labels = `-100` before `<safe>`).
 * **Method**: **LoRA** adapters (`r=16, α=32, dropout=0.05`) on attention projections (`q/k/v/o`).
 * **Artifacts**: adapters saved to `./outputs/safe-prompt-3b-lora` and uploaded to:
-  [https://huggingface.co/chinu-codes/safe-prompt-llama-3_2-3b-lora](https://huggingface.co/chinu-codes/safe-prompt-llama-3_2-3b-lora)
+  [https://huggingface.co/chinu-codes/llama-3.2-3b-pii-redactor-lora](https://huggingface.co/chinu-codes/llama-3.2-3b-pii-redactor-lora)
 
 > The published HF repo includes a **custom `handler.py`** and `requirements.txt` so it can be used with **Hugging Face Inference Endpoints** (server-side) if you decide to host it later. Locally, we load the adapters directly in `backend/app.py`.
-
----
-
-## Using the Hugging Face adapters
-
-You can consume the published adapters in your own code:
-
-```python
-from transformers import AutoTokenizer
-from peft import AutoPeftModelForCausalLM
-from transformers import pipeline
-import torch
-
-repo_id = "chinu-codes/safe-prompt-llama-3_2-3b-lora"
-base_id = "meta-llama/Llama-3.2-3B-Instruct"
-
-tok = AutoTokenizer.from_pretrained(base_id, use_fast=True)
-if tok.pad_token is None:
-    tok.pad_token = tok.eos_token
-
-model = AutoPeftModelForCausalLM.from_pretrained(
-    repo_id, torch_dtype=torch.float16, device_map="cpu", low_cpu_mem_usage=True
-).eval()
-
-gen = pipeline("text-generation", model=model, tokenizer=tok)
-```
-
-If you later enable a **Hosted Inference Endpoint** on HF, the included `handler.py` accepts the standard payload:
-
-```json
-{ "inputs": "raw text to redact" }
-```
-
-…and returns a single `<safe>…</safe>` string.
 
 ---
 
@@ -248,18 +213,9 @@ If you later enable a **Hosted Inference Endpoint** on HF, the included `handler
 
 ---
 
-## Security & privacy
-
-* **Do not treat this as bullet-proof anonymization.** It’s a redaction helper; review output before sharing regulated data.
-* The extension uses your **local** backend (no external calls). Clipboard operations stay on your machine.
-* Consider disabling logs or setting `VALIDATE_MODE=enforce` in production to reduce accidental leaks to logs.
-
----
-
-
 ## Acknowledgements
 
-* Adapters & handler published at: **[https://huggingface.co/chinu-codes/safe-prompt-llama-3_2-3b-lora](https://huggingface.co/chinu-codes/safe-prompt-llama-3_2-3b-lora)**
+* Adapters & handler published at: **[https://huggingface.co/chinu-codes/llama-3.2-3b-pii-redactor-lora](https://huggingface.co/chinu-codes/llama-3.2-3b-pii-redactor-lora)**
 * Dataset: **ai4privacy/pii-masking-200k**
 * Thanks to the open-source ecosystem: **Transformers, PEFT, Accelerate, FastAPI, Chrome MV3**.
 

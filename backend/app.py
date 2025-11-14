@@ -16,7 +16,7 @@ from peft import AutoPeftModelForCausalLM
 # ----------------------------
 ADAPTER_REPO   = os.getenv("ADAPTER_REPO", "chinu-codes/safe-prompt-llama-3_2-3b-lora")
 SEQ_LEN        = int(os.getenv("SEQ_LEN", "256"))     # modest for CPU
-MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", "64"))
+MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", "256"))
 VALIDATE_MODE  = os.getenv("VALIDATE_MODE", "enforce").lower()  # off|warn|enforce
 NUM_THREADS    = int(os.getenv("TORCH_NUM_THREADS", "4"))
 DTYPE          = torch.float16  # CPU-friendly
