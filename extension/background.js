@@ -1,3 +1,4 @@
+// background.js
 const MENU_ID = "safeprompt-redact";
 const API_URL = "http://127.0.0.1:8000/redact";
 
@@ -7,7 +8,7 @@ chrome.runtime.onInstalled.addListener(() => {
     id: MENU_ID,
     title: "Redact with SafePrompt",
     contexts: ["selection"],
-    documentUrlPatterns: ["http://*/*", "https://*/*"]
+    documentUrlPatterns: ["http://*/*", "https://*/*"],
   });
 });
 
@@ -20,31 +21,52 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 
   try {
-    const safe = await callApi(selected);
-    const copied = await copyViaInjection(tab.id, safe);
+    // Call backend and get the redacted text (without <safe> tags)
+    const { redacted, placeholders, latency } = await callApi(selected);
+    const copied = await copyViaInjection(tab.id, redacted);
     if (copied) {
-      await showAlert(tab.id, "SafePrompt: copied to clipboard ✅");
-      log("Copied ok.");
+      const extra = placeholders.length
+        ? ` (${placeholders.length} placeholder${placeholders.length === 1 ? "" : "s"})`
+        : "";
+      await showAlert(tab.id, `SafePrompt: copied to clipboard ✅${extra}`);
+      log(`Copied ok. latency=${latency}ms, placeholders=`, placeholders);
     } else {
       log("Injection blocked; opening result in a new tab.");
-      openResultTab(safe);
+      openResultTab(redacted);
     }
   } catch (err) {
     log("Error:", err?.message || String(err));
+    if (tab?.id) {
+      try { await showAlert(tab.id, "SafePrompt: redaction failed ❌"); } catch {}
+    }
   }
 });
 
 async function callApi(text) {
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ text })
+    mode: "cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const body = await res.text();
-  // Ensure exactly one pair of tags
-  const inner = body.replaceAll("<safe>", "").replaceAll("</safe>", "").trim();
-  return inner
+  let data;
+  const ctype = (res.headers.get("content-type") || "").toLowerCase();
+  if (ctype.includes("application/json")) {
+    data = await res.json();
+    if (!data || typeof data.redacted_text !== "string") {
+      throw new Error("Invalid JSON shape from backend");
+    }
+    return {
+      redacted: data.redacted_text,
+      placeholders: Array.isArray(data.placeholders) ? data.placeholders : [],
+      latency: typeof data.latency_ms === "number" ? data.latency_ms : null,
+    };
+  } else {
+    const body = await res.text();
+    const inner = body.replaceAll("<safe>", "").replaceAll("</safe>", "").trim();
+    return { redacted: inner, placeholders: [], latency: null };
+  }
 }
 
 async function copyViaInjection(tabId, text) {
@@ -64,14 +86,13 @@ async function copyViaInjection(tabId, text) {
           const ok = document.execCommand("copy");
           ta.remove();
           return !!ok;
-        } catch (e) {
+        } catch {
           return false;
         }
-      }
+      },
     });
     return !!result;
-  } catch (e) {
-    // Injection fails on restricted pages (chrome://, store, pdf viewer, etc.)
+  } catch {
     return false;
   }
 }
@@ -81,19 +102,18 @@ async function showAlert(tabId, msg) {
     await chrome.scripting.executeScript({
       target: { tabId },
       args: [msg],
-      func: (m) => alert(m)
+      func: (m) => alert(m),
     });
-  } catch (e) {
+  } catch {
     // ignore if alerts are blocked
   }
 }
 
-function openResultTab(safeText) {
-  const url = "data:text/plain;charset=utf-8," + encodeURIComponent(safeText);
+function openResultTab(text) {
+  const url = "data:text/plain;charset=utf-8," + encodeURIComponent(text);
   chrome.tabs.create({ url });
 }
 
 function log(...args) {
   console.log("[SafePrompt]", ...args);
 }
-
